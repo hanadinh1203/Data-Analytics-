@@ -46,4 +46,115 @@ df.isnull().sum()
 
 df = df.dropna(inplace = False)
 
+# Sanity check for value ranges and to check assumptions
+# Get rows with line_total = price * quantity. Then remove if line total < 0
+df = df[(df['price'] * df['quantity']) == df['line_total']
+df = df[df['line_total'] >=0]
+df.describe()
+
+# 2. Data correlation and visualization
+# Get value between "" in name and put it in category column by using .apply
+# E.g: "ICE CREAM" Peanut Fudge, here we want to extract the phrase "ICE CREAM", and put it in newly created column called category
+pattern = r'^"([A-Z ]+)" (.*)'
+transform_func = lambda x: re.findall(pattern, x)[0]
+
+df[['category', 'name']] = df['name'] \
+    .apply(transform_func) \
+    .apply(pd.Series)
+
+# Job market dataset
+df1 = pd.read_csv("job_market.csv")
+# Fix column datatypes
+df['Date'] = df['Date'].replace(to_replace='T00:00:00.000Z', value=' ', regex=False)
+df['Date'] = pd.to_datetime(df['Date'])
+df['Date'] = df['Date'].dt.tz_localize(None)
+df.dtypes
+# Id                          float64
+# Title                        object
+# Company                      object
+# Date                 datetime64[ns]
+# Location                     object
+# Area                         object
+# Classification               object
+# SubClassification            object
+# Requirement                  object
+# FullDescription              object
+# LowestSalary                float64
+# HighestSalary               float64
+# JobType                      object
+# dtype: object
+
+# Aggregate existing columns into new column (calculate the average salary as a new column)
+df = df.assign(AverageSalary = (df['LowestSalary'] + df['HighestSalary'])/2
+
+# 2. Visualization
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+jm = pd.read_csv('job_market.csv')
+
+# Create dataframe for salary ranges
+df = jm.groupby('LowestSalary').agg({
+    'Id': 'count',
+    'Title': 'count',
+    'Company': 'count',
+    'Date':'count',
+    'Location': 'count',
+    'Area': 'count',
+    'Classification': 'count',
+    'SubClassification': 'count',
+    'Requirement': 'count',
+    'FullDescription':'count',
+    'HighestSalary': 'count',
+    'JobType': 'count'
+}).reset_index()
+df.columns =['LowestSalary','Id','Title','Company','Date','Location','Area','Classififcation', 'SubClassification','Requirement','FullDescription','HighestSalary','JobType']
+df.to_csv('dataframe.csv', index = False)
+df = pd.read_csv('dataframe.csv', index_col='LowestSalary')
+
+# Salary ranges plot
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib import cm
+df.reset_index(inplace=True)
+df['Label']=df['LowestSalary']
+df['Count']=df['Id']
+df.to_csv('new_df.csv')
+dfn = pd.read_csv('new_df.csv', index_col = 'LowestSalary')
+dfn.plot(y= 'Count', kind ='pie', subplots = True, figsize=(10,5),title='Job Posts by Salary Range', autopct='%1.1f%%', startangle=140, legend=False)
+plt.show()
+
+# Pie chart for job market share of cities
+specific_locations = ['Sydney', 'Others', 'Adelaide', 'Perth', 'Brisbane', 'Melbourne']
+new_location = location.loc[location.index.isin(specific_locations)]
+from matplotlib import cm
+
+new_location.plot(y = 'Count', kind='pie', subplots=True, figsize=(12,6), title='Market share of locations',autopct='%1.1f%%', startangle=140, legend=False, rotatelabels=True)
+plt.show()
+
+# Data Correlation
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse 
+import numpy as np
+import pandas as pd
+from pandas.plotting import scatter_matrix as sm
+from scipy.spatial.distance import cdist
+import seaborn as sns
+from sklearn import preprocessing
+from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics.cluster import adjusted_rand_score
+
+
+
+
+
+
+
+
 
