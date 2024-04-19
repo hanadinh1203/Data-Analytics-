@@ -150,6 +150,410 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics.cluster import adjusted_rand_score
 
+# True labels
+label = wine['Label']
+del wine['Label']
+# Data description
+print("Types of variables:\n",wine.dtypes)
+wine.describe()
+# Types of variables:
+# Alcohol                 float64
+# Malic acid              float64
+# Ash                     float64
+# Alcalinity of ash       float64
+# Magnesium                 int64
+# Total phenols           float64
+# Flavanoids              float64
+# Nonflavanoid phenols    float64
+# Proanthocyanins         float64
+# Color intensity         float64
+# Hue                     float64
+# OD280                   float64
+# Proline                   int64
+# dtype: object
+
+kMeansClustering = KMeans(n_clusters = 3, random_state=0) 
+res = kMeansClustering.fit_predict(wine)
+label_pred_KM = kMeansClustering.labels_
+wine ['cluster'] = label_pred_KM.astype('float64')
+sns_plot = sns.pairplot(wine, hue = "cluster", diag_kind="hist")
+plt.show()
+
+plt.figure(figsize=(10,4), dpi = 200)
+sns.heatmap(wine.corr(), annot=True)
+plt.show()
+
+sns.regplot(x='Flavanoids', y='Total phenols', data=wine)
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+
+standardScaler = preprocessing.StandardScaler()
+standardScaler.fit(wine)
+X_scaled_array = standardScaler.transform(wine)
+normalizedData = pd.DataFrame(X_scaled_array, columns = wine.columns)
+
+
+pca = PCA(n_components = 6)
+wine_pca = pd.DataFrame(pca.fit_transform(normalizedData))
+
+
+KM = KMeans(n_clusters = 3, random_state=0)
+res = KM.fit_predict(wine_pca)
+label_pred_KM = KM.labels_ + 1
+
+print("Labels predicted by K-Means:",label_pred_KM)
+print('Length of labels is same as data entry', label_pred_KM.shape)
+
+centroids_KM= KM.cluster_centers_
+print("Shape of centroids_KM",centroids_KM.shape)
+print("Centroids:",centroids_KM)
+
+inertia_KM = KM.inertia_
+print("Inertia:",inertia_KM)
+
+# Labels predicted by K-Means: [3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 1 1 1 1 1 1 1 1 1 1 1 3
+ 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 2 1 1 3 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+Length of labels is same as data entry (178,)
+Shape of centroids_KM (3, 6)
+Centroids: [[-0.56830464  2.03967926  0.15514105  0.07641856  0.056201    0.11709892]
+ [-2.45555586 -1.62331835 -0.21950889  0.09296146  0.08211039  0.10297396]
+ [ 2.61569597 -0.80306316  0.01791589 -0.15658453 -0.12646282 -0.20746938]]
+Inertia: 909.102686396292
+
+wine_c1 = wine[wine['cluster']==1]
+plt.figure(figsize=(10,4), dpi = 200)
+sns.heatmap(wine_c1.corr(), annot=True)
+plt.show()
+
+# 3. Image compression
+# Load and review the image
+import matplotlib.pyplot as plt
+from PIL import Image
+import numpy as np
+image = np.asarray(Image.open('goldcoast.jpeg'))
+plt.imshow(image)
+plt.show()
+
+# Reshape the image for k-means clustering
+image_reshape = image.reshape(50325, 3)
+print("image: {}".format(image.shape))
+print("image reshape: {}".format(image_reshape.shape))
+# image: (183, 275, 3)
+# image reshape: (50325, 3)
+
+# Run k-means clustering on reshaped image
+from sklearn.cluster import KMeans
+modele_km= KMeans(n_clusters=4)
+modele_km.fit(image_reshape)
+# KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=300,
+       n_clusters=4, n_init=10, n_jobs=None, precompute_distances='auto',
+       random_state=0, tol=0.0001, verbose=0)
+
+# Run k-means clustering on reshaped image
+from sklearn.cluster import KMeans
+modele_km= KMeans(algorithm='auto', n_clusters=4, copy_x=True, init='k-means++',
+                  max_iter=300, n_init=10,
+                  random_state=0, tol=0.0001, verbose=0)
+modele_km.fit(image_reshape)
+
+# Print cluster centers and construct compressed image
+palette = modele_km.cluster_centers_
+labels = modele_km.predict(image_reshape)
+compressed_image = np.zeros_like(image_reshape)
+for i in range (len(palette)):
+    compressed_image[labels == i] = palette[i]
+
+print(palette)
+print("compressed image: {}".format(compressed_image.shape))
+
+# [[ 46.92143105  30.51671864  47.95893971]
+# [199.31440301 155.43551146 147.04327745]
+# [127.58700236  84.40009922  79.61825623]
+# [ 38.28791412  46.94403345 112.8056449 ]]
+# compressed image: (50325, 3)
+
+# Show the compressed image
+compressed_image = compressed_image.reshape(183, 275, 3)
+plt.imshow(compressed_image/225.)
+plt.show()
+
+# 4. Basic time-series analyses
+# Visualize future demand in month 13,1,4,15,16 without seasonality (using moving average, exponential smoothing)
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+from math import sqrt
+import sys, os
+from contextlib import contextmanager
+import matplotlib as mpl
+import seaborn as sns
+import sklearn
+
+df = pd.read_csv('forecasting_data.csv')
+sns.lineplot(x="Period", y="Sales", data=df)
+plt.show()
+
+# Moving average
+def moving_average(df, k, to_period):
+    moving_average_data = []
+    for i in range(k, to_period + 1):
+        average_sales = df['Sales'].iloc[i - k:i].mean()
+        moving_average_data.append({'Period':i, 'Sales': average_sales})
+    moving_average_df = pd.DataFrame(moving_average_data)
+    return moving_average_df
+
+f, ax = plt.subplots(1, 1)
+ma_df = moving_average(df, 3, 16)
+sns.pointplot(x='Period', y='Sales', data=df, color='b')
+sns.pointplot(x='Period', y='Sales', data=ma_df, color='g')
+ax.legend(handles=ax.lines[::len(df)+1], labels=["Actual", "3-MA"])
+plt.show()
+
+# Exponential smoothing
+def exponential_smoothing(df, alpha, to_period):
+    smooth_sales = [df['Sales'].iloc[0]]  
+    for i in range(1, to_period):
+        smooth_sales.append(alpha * df['Sales'].iloc[i] + (1 - alpha) * smooth_sales[-1])  # Corrected line
+    exponential_smoothing_df = pd.DataFrame({'Period': range(1, to_period + 1), 'Sales': smooth_sales})
+    return exponential_smoothing_df
+
+f, ax = plt.subplots(1, 1)
+es_df_02 = exponential_smoothing(df, 0.2, len(df))
+es_df_08 = exponential_smoothing(df, 0.8, len(df))
+sns.pointplot(ax=ax, x='Period', y='Sales', data=df, color='b')
+sns.pointplot(ax=ax, x='Period', y='Sales', data=es_df_02, color='g')
+sns.pointplot(ax=ax, x='Period', y='Sales', data=es_df_08, color='r')
+ax.legend(handles=ax.lines[::len(df)+2], labels=["Actual", r'$\alpha=0.2$', r"$\alpha=0.8$"])
+plt.show()
+
+# Predict future demand in the four next quarters with seasonality
+def get_season(row):
+    if row['Period'] >= 5 and row['Period'] <= 8:
+        return 'II'
+    elif row['Period'] >= 9 and row['Period'] <= 12:
+        return 'III'
+    else:
+        return 'I'
+
+def get_seq(row):
+    return row['Period'] % 4 and row['Period'] % 4 or 4
+
+def predict_with_seasonality(df, months):
+    new_df = df.copy()
+    new_df['Season'] = new_df.apply(get_season, axis=1)
+    new_df['Seq'] = new_df.apply(get_seq, axis=1)
+    
+    season_df = pd.DataFrame((new_df.pivot('Seq','Season')['Sales']).to_records())
+    season_df.index = season_df['Seq']
+    season_df = season_df.drop(['Seq'], axis=1)
+    
+    #avg_df = new_df.groupby('Season')['Sales'].mean()  
+    avg_df = season_df.apply(np.mean)
+    
+    seasonal_index_df = pd.DataFrame(columns=['I','II','III'])
+    seasonal_index_df['I'] = season_df['I'] / avg_df.mean()  
+    seasonal_index_df['II'] = season_df['II'] / avg_df.mean()
+    seasonal_index_df['III'] = season_df['III'] / avg_df.mean()
+    seasonal_index_df['Avg'] = seasonal_index_df.mean(axis=1)
+    
+    season = np.array([1,2,3])
+    avg_arr = np.array([avg_df['I'], avg_df['II'], avg_df['III']])
+    fit = np.polyfit(season, avg_arr, 3)
+    poly = np.poly1d(fit)
+    average_predict = poly(4)
+    
+    forecast_df = pd.DataFrame(columns=['Period','Sales'])
+    forecast_df['Sales'] = average_predict * seasonal_index_df['Avg'] 
+    forecast_df['Period'] = months
+    forecast_df.index = np.array(months) - 1
+    return forecast_df
+
+season_df = predict_with_seasonality(df, [13,14,15,16])
+
+f, ax = plt.subplots(1, 1)
+plt.plot(df['Period'], df['Sales'], c='y')
+plt.plot(season_df['Period'], season_df['Sales'], c='r')
+plt.show()
+
+# Evaluation: compare the above implemented methods
+eval_df = pd.read_csv('forecasting_actual.csv')
+eval_df = pd.concat([df, eval_df], ignore_index=True)
+
+f, ax = plt.subplots(1, 1)
+sns.pointplot(ax=ax, x='Period', y='Sales', data=pd.concat([df, season_df], ignore_index=True), color='r')
+sns.pointplot(ax=ax, x='Period', y='Sales', data=ma_df, color='yellow')
+sns.pointplot(ax=ax, x='Period', y='Sales', data=es_df_08, color='green')
+sns.pointplot(ax=ax, x='Period', y='Sales', data=eval_df, color='b')
+ax.legend(handles=ax.lines[::len(df)+5], labels=["Seasonal", 'MA', "Exponential smoothing", "Actual"])
+plt.show()
+
+MAD = np.absolute(eval_df['Sales'][12:16] - moving_average(eval_df, 3, 16)['Sales'][12:16]).mean()
+print("MAD of {0}:{1}".format("3-MA", MAD))
+
+MAD = np.absolute(eval_df['Sales'])[12:16] - exponential_smoothing(eval_df, 0.2, to_period=16)['Sales'][12:16].mean()
+print("MAD of {0}: {1}".format("Exponential smoothing with alpha=0.2", MAD))
+
+MAD = np.absolute(eval_df['Sales'][12:16]) - exponential_smoothing(eval_df, 0.8, to_period=16)['Sales'][12:16].mean()
+print("MAD of {0}: {1}".format("Exponential smoothing with alpha=0.8", MAD))
+
+MAD = np.absolute(eval_df['Sales'][12:16] - season_df['Sales'][0:4]).mean()
+print("MAD of {0}: {1}".format("Seasonality Method", MAD))
+# MAD of 3-MA:2694.75
+# MAD of Exponential smoothing with alpha=0.2: 12   -2653.422976
+# 13     596.577024
+# 14    4796.577024
+# 15    2296.577024
+# Name: Sales, dtype: float64
+# MAD of Exponential smoothing with alpha=0.8: 12   -3805.39756
+# 13    -555.39756
+# 14    3644.60244
+# 15    1144.60244
+# Name: Sales, dtype: float64
+# MAD of Seasonality Method: 132.02741095756824
+
+MSE_ma = np.mean(eval_df['Sales'][12:16] - moving_average(eval_df, 3, 16)['Sales'][12:16])**2
+print("MSE of {0}: {1}".format("3-MA", MSE_ma))
+
+MSE_es_02 = np.mean(eval_df['Sales'][12:16] - exponential_smoothing(eval_df, 0.2, to_period=16)['Sales'][12:16])**2
+print("MSE of {0}: {1}".format("Exponential smoothing with alpha=0.2", MSE_es_02))
+
+MSE_es_08 = np.mean(eval_df['Sales'][12:16] - exponential_smoothing(eval_df, 0.8, to_period=16)['Sales'][12:16]) ** 2
+print("MSE of {0}: {1}".format("Exponential smoothing with alpha=0.8", MSE_es_08))
+
+MSE_season = np.mean(eval_df['Sales'][12:16] - season_df['Sales'][0:4])**2
+print("MSE of {0}: {1}".format("Seasonality Method", MSE_season))
+# MSE of 3-MA: 476445.0625
+# MSE of Exponential smoothing with alpha=0.2: 1585274.9518225288
+# MSE of Exponential smoothing with alpha=0.8: 11470.932655795339
+# MSE of Seasonality Method: 5822.881158244049
+
+# Electricity Consumption Exploration
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import preprocessing
+df = pd.read_csv('opsd_germany_daily.csv', index_col=0, parse_dates=True)
+df.index = pd.to_datetime(df.index)
+type(df.index)
+plt.figure(figsize=(12,8))
+df['Consumption'].plot(label='Consumption', color='blue')
+df['Wind+Solar'].plot(label='Production', color='orange')
+plt.title('Consumption vs. Production')
+plt.legend(loc='lower left')
+plt.show()
+plt.figure(figsize=(12,8))
+plt.scatter(df.index, df['Consumption'], label='Consumption', color='blue')
+plt.title('Consumption vs. Production')
+plt.xlabel('Years')
+plt.show()
+plt.figure(figsize=(12,8))
+plt.scatter(df.index, df['Wind'], label='Wind', color='blue')
+df['Solar'].plot(label='Solar', color='orange')
+plt.title('Solar Product over Time')
+plt.xlabel('Years')
+plt.legend(loc = 'upper left')
+plt.show()
+plt.figure(figsize=(12,8))
+df['Consumption'].plot(label='Consumption', color='blue')
+df['Wind'].plot(label='Wind', color='orange')
+df['Solar'].plot(label='Solar', color='green')
+plt.title('Consumption vs. Production')
+plt.legend(loc='center')
+plt.show()
+
+import matplotlib.dates as mdates
+plt.figure(figsize=(12,8))
+ax = df['Consumption']['2017-01-01':'2017-12-31'].plot(color='blue')
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+plt.title('Electricity Consumption in 2017')
+plt.show()
+
+plt.figure(figsize=(12,8))
+ax = df['Consumption']['2017-01-01':'2017-12-31'].plot(color='blue')
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+ax.tick_params(axis='x',rotation=70)
+plt.title('Electricity Consumption in 2017')
+plt.show()
+
+from matplotlib import dates
+plt.figure(figsize=(12,8))
+ax = df['Consumption']['2017-12-01':'2017-12-31'].plot(color='blue')
+ax.xaxis.set_major_locator(dates.WeekdayLocator(byweekday=6))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+ax.tick_params(axis='x',rotation=70)
+plt.title('Electricity Consumption in December 2017')
+plt.show()
+
+import datetime as dt
+df_2 = df.reset_index()
+df_2['year'] = df_2['Date'].dt.year
+df_2['month'] = df_2['Date'].dt.strftime('%b')
+years = df_2['year'].unique()
+print(years)
+df_2
+
+import seaborn as sns
+df_2['year'] = df_2['year'].astype(str)
+
+# Plot the boxplot
+plt.figure(figsize=(12,8))
+sns.boxplot(x='year', y='Consumption', data=df_2)
+plt.title('Aggregated Consumption by Years')
+plt.xlabel('Year')
+plt.ylabel('Consumption')
+plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
+plt.show()
+
+plt.figure(figsize=(12,8))
+
+df_2['month'] = df_2['month'].astype(str)
+sns.boxplot(x='month', y='Consumption', data=df_2)
+plt.title('Aggregated Values by Month')
+plt.xlabel('month')
+plt.ylabel('Consumption')
+plt.show()
+
+df_2.dropna(axis=0, inplace=True)
+df_2 = df_2.set_index('Date')
+df_2['Wind+Solar'].plot(label='Production', color='blue')
+plt.show()
+
+df_2['Consumption'].corr(df_2['Wind+Solar'])
+# 0.02764784385924093
+plt.figure(figsize=(12,8))
+sns.scatterplot(x ='Consumption', y='Wind+Solar', data=df_2)
+plt.xlabel('Consumption')
+plt.ylabel('Production')
+plt.show()
+
+plt.figure(figsize=(12,8))
+sns.scatterplot(x='Solar', y='Wind', data=df_2)
+plt.xlabel('Solar')
+plt.ylabel('Wind')
+plt.show()
+
+plt.figure(figsize=(12,8))
+sns.scatterplot(x='Consumption', y='Wind', data=df_2)
+plt.xlabel('Consumption')
+plt.ylabel('Wind')
+plt.show()
+
+df_2['Consumption'].corr(df_2['Solar'])
+
+plt.figure(figsize=(12,8))
+sns.scatterplot(x='Consumption', y='Solar', data=df_2)
+plt.xlabel('Consumption')
+plt.ylabel('Solar')
+plt.show()
+
+
+
+
 
 
 
