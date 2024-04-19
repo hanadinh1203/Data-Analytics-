@@ -1,0 +1,49 @@
+# 1. For task 1, I will get to learn on how to preprocess my dataset. In this task, I will use job_market and sales datasets.
+
+# Sales dataset
+# Import important packages
+import pandas as pd
+import numpy as np
+import seaborn
+import re
+df = np.read_csv("sales.csv")
+df.dtypes()
+# order_id       int64
+# name          object
+# ordered_at    object
+# price         object
+# quantity       int64
+# line_total    object
+# dtype: object
+
+# Fix column datatypes
+# Change datatype of ordered_at from object to datetime, change price and line_total to float
+df['ordered_at'] = pd.to_datetime(df['ordered_at'])
+for column in ['price', 'line_total']:
+     df[column] = df[column].apply(lambda x: float(x[1:]))
+df.dtypes()
+# order_id               int64
+# name                  object
+# ordered_at    datetime64[ns]
+# price                float64
+# quantity               int64
+# line_total           float64
+# dtype: object
+
+# Drop if duplicated or null
+df[df.duplicated()].shape[0]
+# 538
+
+df.drop_duplicates(inplace = True)
+df.isnull().sum()
+# order_id         0
+# name          1488
+# ordered_at       0
+# price            0
+# quantity         0
+# line_total       0
+# dtype: int64
+
+df = df.dropna(inplace = False)
+
+
